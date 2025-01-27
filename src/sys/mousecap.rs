@@ -1,0 +1,1 @@
+// captures mouse captures for getting what part of the screen to capture
