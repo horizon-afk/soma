@@ -1,13 +1,11 @@
-#![windows_subsystem = "windows"]
-
 use winit::{
     application::ApplicationHandler,
     event::{ElementState, KeyEvent, MouseButton, WindowEvent},
     keyboard::{Key, NamedKey},
 };
 
-mod context;
-use context::AppContext;
+
+use crate::context::AppContext;
 
 pub struct Drag {
     start: (f64, f64),
@@ -110,7 +108,7 @@ impl ApplicationHandler for App {
     }
 }
 
-fn screensnap() -> anyhow::Result<()> {
+pub fn screensnap() -> anyhow::Result<()> {
     let mut app = App { context: None };
     let event_loop = winit::event_loop::EventLoop::new()?;
     event_loop.run_app(&mut app)?;
