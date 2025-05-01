@@ -1,50 +1,36 @@
 use reqwest::blocking::{Client, multipart};
 use std::path::Path;
-use scraper::{Html, Selector};
-use regex::Regex;
+
+use reqwest::header::{USER_AGENT};
+use reqwest::redirect::Policy;
 
 
 pub fn glens() -> String {
 
-    println!("Running post()");
+     println!("Running post()");
     let file_path = "output_image.png"; // Change this to the path of your file
     let path = Path::new(file_path);
     let form = multipart::Form::new().file("encoded_image", path).expect("");
 
 
     let url = "https://lens.google.com/v3/upload?ep=ccm";
-    let client = Client::builder().referer(false).build().expect("Error building http client");
-    let request = client.post(url).header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)").multipart(form).build().expect("Error sending POST");
-
+    let client = Client::builder().use_rustls_tls()
+    .redirect(Policy::none())
+    .build().expect("Error building http client");
+    let request = client.post(url)
+    .header(USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36")
+    .multipart(form).build().expect("Error sending POST");
 
     let response = client.execute(request).expect("Internet not working");
-    let body = response.text().expect("couldnt get a response");
-    let link = generate_link(&body);
-    link
-}
 
-
-fn generate_link(response_body: &str) -> String{
-    let document = Html::parse_document(&response_body);
-    let selector = Selector::parse("c-wiz").expect("Not working");
+    let headers = response.headers();
+    println!("{:?}", headers);
+    let url = headers.get("location").expect("no redirect found");
+    // let body = &response.text().expect("couldnt get a response");
     
-    //ig the required one is the first one
-    let link_data = document.select(&selector).next().expect("scrapping error").value().attr("data-p");
+    println!("{:?}", url);
+    url.to_str().unwrap().to_string()
+    
+    
 
-    let p = find_p(link_data.expect("oops"));
-
-    format!("https://lens.google.com/search?ep=ccm&p={}", p)
-   
-
-}
-
-fn find_p(text : &str) -> &str {
-
-    let re = Regex::new(r"(Abrf[^\\\s]*)\\").unwrap();
-    if let Some(value) = re.captures(text) {
-        let capture = value.get(1).unwrap().as_str();
-        return capture; 
-    } else {
-        return "";
-    }
 }
